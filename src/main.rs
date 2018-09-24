@@ -150,8 +150,8 @@ impl event::EventHandler for GameState {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         graphics::clear(ctx);
-        self.cursor.draw(ctx)?;
         self.grid.draw(ctx)?;
+        self.cursor.draw(ctx)?;
         graphics::present(ctx);
         ggez::timer::yield_now();
         Ok(())
