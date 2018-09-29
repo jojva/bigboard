@@ -1,5 +1,8 @@
 extern crate ggez;
 
+mod colors;
+
+use colors::ColorWheel;
 use ggez::event::Keycode;
 use ggez::graphics::Color;
 use ggez::{event, graphics, Context, GameResult};
@@ -86,16 +89,24 @@ impl Direction {
 
 struct Cursor {
     pos: GridPosition,
+    color: Color,
 }
 
 impl Cursor {
     pub fn new(pos: GridPosition) -> Self {
-        Cursor { pos }
+        Cursor {
+            pos,
+            color: colors::BLACK,
+        }
+    }
+
+    pub fn set_color(&mut self, color: Color) {
+        self.color = color;
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
-        graphics::set_color(ctx, [0.0, 0.0, 1.0, 1.0].into())?;
-        graphics::rectangle(ctx, graphics::DrawMode::Fill, self.pos.into())
+        graphics::set_color(ctx, self.color)?;
+        graphics::rectangle(ctx, graphics::DrawMode::Line(5.0), self.pos.into())
     }
 }
 
@@ -122,17 +133,19 @@ impl Grid {
     }
 }
 
-struct GameState {
+struct GameState<'a> {
+    color_wheel: ColorWheel<'a>,
     cursor: Cursor,
     grid: Grid,
     last_update: Instant,
 }
 
-impl GameState {
+impl<'a> GameState<'a> {
     pub fn new() -> Self {
         let cursor_pos = GridPosition::new(10, 10);
 
         GameState {
+            color_wheel: ColorWheel::new(),
             cursor: Cursor::new(cursor_pos),
             grid: Grid::new(),
             last_update: Instant::now(),
@@ -140,7 +153,7 @@ impl GameState {
     }
 }
 
-impl event::EventHandler for GameState {
+impl<'a> event::EventHandler for GameState<'a> {
     fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
         if Instant::now() - self.last_update >= Duration::from_millis(MILLIS_PER_UPDATE) {
             self.last_update = Instant::now();
@@ -167,6 +180,15 @@ impl event::EventHandler for GameState {
         if let Some(dir) = Direction::from_keycode(keycode) {
             self.cursor.pos = GridPosition::new_from_move(self.cursor.pos, dir);
         }
+    }
+
+    fn mouse_wheel_event(&mut self, _ctx: &mut Context, _x: i32, y: i32) {
+        if y > 0 {
+            self.color_wheel.backward();
+        } else if y < 0 {
+            self.color_wheel.forward();
+        }
+        self.cursor.set_color(self.color_wheel.get_color());
     }
 }
 
