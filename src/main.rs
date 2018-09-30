@@ -42,11 +42,15 @@ impl<'a> event::EventHandler for GameState<'a> {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        let now = Instant::now();
         // graphics::clear(ctx);
         self.grid.draw(ctx)?;
         self.cursor.draw(ctx)?;
         graphics::present(ctx);
         ggez::timer::yield_now();
+        let _elapsed = now.elapsed();
+        // Uncomment to watch rendering time
+        // println!("Drawing took {}ms", (elapsed.as_secs() * 1_000) + (elapsed.subsec_nanos() / 1_000_000) as u64);
         Ok(())
     }
 
